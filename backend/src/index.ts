@@ -12,7 +12,16 @@ import { requireAuth } from "./middleware/auth.js";
 };
 
 const app = express();
-app.use(cors({ origin: env.FRONTEND_URL }));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
+  next();
+});
 app.use(express.json());
 
 app.get("/health", async (_req, res) => {
