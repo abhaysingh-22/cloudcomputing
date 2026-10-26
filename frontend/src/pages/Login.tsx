@@ -20,7 +20,7 @@ export default function Login() {
       setToken(res.data.token);
       navigate("/");
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Something went wrong");
+      setError(err.response?.data?.error ?? "Invalid credentials");
     } finally {
       setLoading(false);
     }
@@ -28,18 +28,51 @@ export default function Login() {
 
   return (
     <div style={styles.page}>
+      {/* Topographic glow halo behind the card */}
+      <div style={styles.halo} />
+
       <form onSubmit={onSubmit} style={styles.card}>
-        <h2 style={{ margin: 0 }}>Log in</h2>
-        <input style={styles.input} type="email" placeholder="Email"
-          value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input style={styles.input} type="password" placeholder="Password"
-          value={password} onChange={(e) => setPassword(e.target.value)} required />
-        {error && <p style={styles.error}>{error}</p>}
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <div style={styles.logoBadge}>☁️</div>
+          <h2 style={styles.title}>Cloud File Processor</h2>
+          <p style={styles.subtitle}>Sign in to access distributed S3 + SQS pipeline</p>
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Email Address</label>
+          <input
+            style={styles.input}
+            type="email"
+            placeholder="you@domain.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Password</label>
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        {error && <p style={styles.error}>⚠️ {error}</p>}
+
         <button style={styles.button} disabled={loading}>
-          {loading ? "Logging in..." : "Log in"}
+          {loading ? "Authenticating..." : "Sign in →"}
         </button>
-        <p style={{ margin: 0, fontSize: 14 }}>
-          No account? <Link to="/register">Register</Link>
+
+        <p style={styles.footerText}>
+          Don't have an account?{" "}
+          <Link to="/register" style={styles.link}>
+            Create one
+          </Link>
         </p>
       </form>
     </div>
@@ -47,16 +80,112 @@ export default function Login() {
 }
 
 export const styles: Record<string, React.CSSProperties> = {
-  page: { minHeight: "100vh", display: "grid", placeItems: "center" },
+  page: {
+    minHeight: "100vh",
+    display: "grid",
+    placeItems: "center",
+    padding: 20,
+    position: "relative",
+  },
+  halo: {
+    position: "absolute",
+    width: 380,
+    height: 380,
+    background: "radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(37, 99, 235, 0.05) 50%, transparent 70%)",
+    filter: "blur(40px)",
+    pointerEvents: "none",
+  },
   card: {
-    background: "white", padding: 32, borderRadius: 12, width: 320,
-    display: "flex", flexDirection: "column", gap: 14,
-    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+    position: "relative",
+    background: "rgba(15, 23, 42, 0.8)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    padding: "36px 32px",
+    borderRadius: 18,
+    width: 360,
+    maxWidth: "100%",
+    display: "flex",
+    flexDirection: "column",
+    gap: 16,
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
   },
-  input: { padding: 10, fontSize: 15, borderRadius: 8, border: "1px solid #ccc" },
+  logoBadge: {
+    fontSize: 28,
+    background: "rgba(56, 189, 248, 0.1)",
+    border: "1px solid rgba(56, 189, 248, 0.25)",
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    display: "grid",
+    placeItems: "center",
+    margin: "0 auto 12px",
+    boxShadow: "0 0 20px rgba(56, 189, 248, 0.2)",
+  },
+  title: {
+    margin: 0,
+    fontSize: 20,
+    fontWeight: 700,
+    color: "#f8fafc",
+    letterSpacing: "-0.02em",
+  },
+  subtitle: {
+    margin: "6px 0 0",
+    fontSize: 13,
+    color: "#94a3b8",
+  },
+  inputGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#cbd5e1",
+    letterSpacing: "0.02em",
+  },
+  input: {
+    padding: "11px 14px",
+    fontSize: 14,
+    borderRadius: 10,
+    border: "1px solid #334155",
+    background: "rgba(8, 12, 20, 0.7)",
+    color: "#f8fafc",
+    outline: "none",
+    transition: "border-color 0.2s, box-shadow 0.2s",
+  },
   button: {
-    padding: 10, fontSize: 15, borderRadius: 8, border: "none",
-    background: "#2563eb", color: "white", cursor: "pointer",
+    marginTop: 6,
+    padding: "12px",
+    fontSize: 14,
+    fontWeight: 600,
+    borderRadius: 10,
+    border: "none",
+    background: "linear-gradient(135deg, #38bdf8, #2563eb)",
+    color: "white",
+    cursor: "pointer",
+    boxShadow: "0 4px 16px rgba(37, 99, 235, 0.4)",
+    transition: "transform 0.1s, box-shadow 0.2s",
   },
-  error: { color: "#b91c1c", margin: 0, fontSize: 14 },
+  error: {
+    color: "#f87171",
+    margin: 0,
+    fontSize: 13,
+    background: "rgba(239, 68, 68, 0.1)",
+    padding: "8px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(239, 68, 68, 0.2)",
+  },
+  footerText: {
+    margin: "8px 0 0",
+    fontSize: 13,
+    color: "#94a3b8",
+    textAlign: "center",
+  },
+  link: {
+    color: "#38bdf8",
+    textDecoration: "none",
+    fontWeight: 600,
+  },
 };

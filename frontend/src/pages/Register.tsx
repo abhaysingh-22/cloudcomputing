@@ -21,7 +21,7 @@ export default function Register() {
       setToken(res.data.token);
       navigate("/");
     } catch (err: any) {
-      setError(err.response?.data?.error ?? "Something went wrong");
+      setError(err.response?.data?.error ?? "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -29,18 +29,50 @@ export default function Register() {
 
   return (
     <div style={styles.page}>
+      <div style={styles.halo} />
+
       <form onSubmit={onSubmit} style={styles.card}>
-        <h2 style={{ margin: 0 }}>Create account</h2>
-        <input style={styles.input} type="email" placeholder="Email"
-          value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input style={styles.input} type="password" placeholder="Password (min 8 characters)"
-          value={password} onChange={(e) => setPassword(e.target.value)} required />
-        {error && <p style={styles.error}>{error}</p>}
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <div style={styles.logoBadge}>✨</div>
+          <h2 style={styles.title}>Create Account</h2>
+          <p style={styles.subtitle}>Get started with cloud-distributed file processing</p>
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Email Address</label>
+          <input
+            style={styles.input}
+            type="email"
+            placeholder="you@domain.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Password (minimum 8 characters)</label>
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        {error && <p style={styles.error}>⚠️ {error}</p>}
+
         <button style={styles.button} disabled={loading}>
-          {loading ? "Creating..." : "Register"}
+          {loading ? "Creating account..." : "Register Account →"}
         </button>
-        <p style={{ margin: 0, fontSize: 14 }}>
-          Have an account? <Link to="/login">Log in</Link>
+
+        <p style={styles.footerText}>
+          Already registered?{" "}
+          <Link to="/login" style={styles.link}>
+            Sign in
+          </Link>
         </p>
       </form>
     </div>

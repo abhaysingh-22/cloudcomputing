@@ -148,4 +148,15 @@ router.get("/:id/download", async (req, res) => {
   res.json({ downloadUrl, fileName: downloadName });
 });
 
+// Delete a job
+router.delete("/:id", async (req, res) => {
+  const job = await prisma.job.findFirst({
+    where: { id: req.params.id, userId: req.userId },
+  });
+  if (!job) return res.status(404).json({ error: "Job not found" });
+
+  await prisma.job.delete({ where: { id: job.id } });
+  res.json({ success: true });
+});
+
 export default router;
