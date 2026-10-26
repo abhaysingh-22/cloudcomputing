@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  UPLOADING
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ChunkStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  jobs      Job[]
+  createdAt DateTime @default(now())
+}
+
+model Job {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  fileName        String
+  s3InputKey      String
+  s3OutputKey     String?
+  status          JobStatus @default(UPLOADING)
+  totalChunks     Int       @default(0)
+  completedChunks Int       @default(0)
+  error           String?
+  chunks          Chunk[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Chunk {
+  id          String      @id @default(uuid())
+  jobId       String
+  job         Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  index       Int
+  startByte   BigInt
+  endByte     BigInt
+  status      ChunkStatus @default(PENDING)
+  s3ResultKey String?
+  attempts    Int         @default(0)
+
+  @@unique([jobId, index])
+}

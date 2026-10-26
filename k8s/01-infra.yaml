@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgdata
+  namespace: cfp
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: cfp
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres }
+  template:
+    metadata:
+      labels: { app: postgres }
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - { name: POSTGRES_USER, value: cfp_user }
+            - { name: POSTGRES_PASSWORD, value: cfp_pass }
+            - { name: POSTGRES_DB, value: cfp_db }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "cfp_user", "-d", "cfp_db"]
+            periodSeconds: 3
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pgdata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: cfp
+spec:
+  selector: { app: postgres }
+  ports:
+    - port: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localstack
+  namespace: cfp
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: localstack }
+  template:
+    metadata:
+      labels: { app: localstack }
+    spec:
+      enableServiceLinks: false   # a service named "localstack" would inject LOCALSTACK_* env vars that confuse it
+      containers:
+        - name: localstack
+          image: localstack/localstack:3.8.1
+          env:
+            - { name: SERVICES, value: "s3,sqs" }
+          ports:
+            - containerPort: 4566
+          readinessProbe:
+            httpGet: { path: /_localstack/health, port: 4566 }
+            periodSeconds: 5
+          volumeMounts:
+            - name: init
+              mountPath: /etc/localstack/init/ready.d
+      volumes:
+        - name: init
+          configMap:
+            name: localstack-init
+            defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: localstack
+  namespace: cfp
+spec:
+  selector: { app: localstack }
+  ports:
+    - port: 4566
