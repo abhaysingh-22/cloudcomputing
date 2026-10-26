@@ -7,16 +7,14 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { prisma } from "../lib/prisma.js";
 import { s3Public } from "../lib/s3.js";
 import { sqs } from "../lib/sqs.js";
-import { computeChunks, getObjectSize } from "../lib/chunker.js";
+import { computeChunks, computeBinaryChunks, getObjectSize } from "../lib/chunker.js";
 import { env } from "../config/env.js";
 
 const router = Router();
 
+// Accept ANY file type: CSV, PDF, PPTX, DOCX, Images, Videos, Archives, etc.
 const createJobSchema = z.object({
-  fileName: z
-    .string()
-    .min(1)
-    .refine((n) => n.toLowerCase().endsWith(".csv"), "Only .csv files are allowed"),
+  fileName: z.string().min(1),
 });
 
 // Create a job and get a presigned upload URL
@@ -27,7 +25,9 @@ router.post("/", async (req, res) => {
   }
 
   const jobId = randomUUID();
-  const s3InputKey = `uploads/${req.userId}/${jobId}/input.csv`;
+  // Preserve actual uploaded file name and extension
+  const safeFileName = encodeURIComponent(parsed.data.fileName).replace(/%/g, "_");
+  const s3InputKey = `uploads/${req.userId}/${jobId}/${safeFileName}`;
 
   const job = await prisma.job.create({
     data: {
@@ -83,7 +83,13 @@ router.post("/:id/start", async (req, res) => {
   }
   if (size === 0) return res.status(400).json({ error: "File is empty" });
 
-  const ranges = await computeChunks(job.s3InputKey, size, env.CHUNK_SIZE_BYTES);
+  // Intelligent Chunking:
+  // - CSV files: chunk aligned on newline boundaries
+  // - All other files (PDF, images, videos, docx, etc.): fast binary byte-range slicing
+  const isCsv = job.fileName.toLowerCase().endsWith(".csv");
+  const ranges = isCsv
+    ? await computeChunks(job.s3InputKey, size, env.CHUNK_SIZE_BYTES)
+    : computeBinaryChunks(size, env.CHUNK_SIZE_BYTES);
 
   await prisma.$transaction([
     prisma.chunk.createMany({
@@ -113,6 +119,8 @@ router.post("/:id/start", async (req, res) => {
             s3Key: job.s3InputKey,
             startByte: r.startByte,
             endByte: r.endByte,
+            isCsv,
+            fileName: job.fileName,
           }),
         })),
       })
@@ -133,7 +141,10 @@ router.get("/:id/download", async (req, res) => {
     return res.status(409).json({ error: `Job is ${job.status}, not ready for download` });
   }
 
-  const downloadName = job.fileName.replace(/\.csv$/i, "") + "-processed.csv";
+  const dotIndex = job.fileName.lastIndexOf(".");
+  const baseName = dotIndex !== -1 ? job.fileName.slice(0, dotIndex) : job.fileName;
+  const ext = dotIndex !== -1 ? job.fileName.slice(dotIndex) : "";
+  const downloadName = `${baseName}-processed${ext}`;
 
   const downloadUrl = await getSignedUrl(
     s3Public,

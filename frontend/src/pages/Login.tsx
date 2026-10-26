@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -10,6 +10,18 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("cfp_theme") || "dark");
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
+    }
+    localStorage.setItem("cfp_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,13 +40,19 @@ export default function Login() {
 
   return (
     <div style={styles.page}>
-      {/* Topographic glow halo behind the card */}
+      {/* Top right theme toggle */}
+      <div style={{ position: "absolute", top: 20, right: 20 }}>
+        <button onClick={toggleTheme} style={styles.themeToggleBtn}>
+          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+        </button>
+      </div>
+
       <div style={styles.halo} />
 
       <form onSubmit={onSubmit} style={styles.card}>
         <div style={{ textAlign: "center", marginBottom: 8 }}>
           <div style={styles.logoBadge}>☁️</div>
-          <h2 style={styles.title}>Cloud File Processor</h2>
+          <h2 style={styles.title}>Cloud File Ingestion</h2>
           <p style={styles.subtitle}>Sign in to access distributed S3 + SQS pipeline</p>
         </div>
 
@@ -87,6 +105,18 @@ export const styles: Record<string, React.CSSProperties> = {
     padding: 20,
     position: "relative",
   },
+  themeToggleBtn: {
+    background: "var(--bg-card)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid var(--border-card)",
+    color: "var(--text-title)",
+    borderRadius: 10,
+    padding: "8px 14px",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    boxShadow: "var(--card-shadow)",
+  },
   halo: {
     position: "absolute",
     width: 380,
@@ -97,23 +127,24 @@ export const styles: Record<string, React.CSSProperties> = {
   },
   card: {
     position: "relative",
-    background: "rgba(15, 23, 42, 0.8)",
+    background: "var(--bg-card)",
     backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)",
     padding: "36px 32px",
-    borderRadius: 18,
-    width: 360,
+    borderRadius: 20,
+    width: 380,
     maxWidth: "100%",
     display: "flex",
     flexDirection: "column",
     gap: 16,
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+    border: "1px solid var(--border-card)",
+    boxShadow: "var(--card-shadow)",
+    transition: "all 0.3s ease",
   },
   logoBadge: {
     fontSize: 28,
-    background: "rgba(56, 189, 248, 0.1)",
-    border: "1px solid rgba(56, 189, 248, 0.25)",
+    background: "var(--badge-bg)",
+    border: "1px solid var(--badge-border)",
     width: 52,
     height: 52,
     borderRadius: 14,
@@ -124,15 +155,15 @@ export const styles: Record<string, React.CSSProperties> = {
   },
   title: {
     margin: 0,
-    fontSize: 20,
-    fontWeight: 700,
-    color: "#f8fafc",
+    fontSize: 22,
+    fontWeight: 800,
+    color: "var(--text-title)",
     letterSpacing: "-0.02em",
   },
   subtitle: {
     margin: "6px 0 0",
     fontSize: 13,
-    color: "#94a3b8",
+    color: "var(--text-muted)",
   },
   inputGroup: {
     display: "flex",
@@ -142,16 +173,16 @@ export const styles: Record<string, React.CSSProperties> = {
   label: {
     fontSize: 12,
     fontWeight: 600,
-    color: "#cbd5e1",
+    color: "var(--text-title)",
     letterSpacing: "0.02em",
   },
   input: {
     padding: "11px 14px",
     fontSize: 14,
     borderRadius: 10,
-    border: "1px solid #334155",
-    background: "rgba(8, 12, 20, 0.7)",
-    color: "#f8fafc",
+    border: "1px solid var(--border-dropzone)",
+    background: "var(--bg-dropzone)",
+    color: "var(--text-title)",
     outline: "none",
     transition: "border-color 0.2s, box-shadow 0.2s",
   },
@@ -159,7 +190,7 @@ export const styles: Record<string, React.CSSProperties> = {
     marginTop: 6,
     padding: "12px",
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 700,
     borderRadius: 10,
     border: "none",
     background: "linear-gradient(135deg, #38bdf8, #2563eb)",
@@ -180,12 +211,12 @@ export const styles: Record<string, React.CSSProperties> = {
   footerText: {
     margin: "8px 0 0",
     fontSize: 13,
-    color: "#94a3b8",
+    color: "var(--text-muted)",
     textAlign: "center",
   },
   link: {
-    color: "#38bdf8",
+    color: "var(--badge-color)",
     textDecoration: "none",
-    fontWeight: 600,
+    fontWeight: 700,
   },
 };

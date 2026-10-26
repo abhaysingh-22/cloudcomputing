@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -11,6 +11,18 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("cfp_theme") || "dark");
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
+    }
+    localStorage.setItem("cfp_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,6 +41,12 @@ export default function Register() {
 
   return (
     <div style={styles.page}>
+      <div style={{ position: "absolute", top: 20, right: 20 }}>
+        <button onClick={toggleTheme} style={styles.themeToggleBtn}>
+          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+        </button>
+      </div>
+
       <div style={styles.halo} />
 
       <form onSubmit={onSubmit} style={styles.card}>

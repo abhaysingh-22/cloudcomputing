@@ -1,23 +1,90 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-page: #060911;
+  --bg-topography: url('/topography.jpg');
+  --bg-card: rgba(15, 23, 42, 0.75);
+  --bg-card-hover: rgba(30, 41, 59, 0.75);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+  --text-title: #f8fafc;
+  --text-body: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --bg-track: #080c14;
+  --border-track: rgba(255, 255, 255, 0.1);
+  --bg-dropzone: rgba(15, 23, 42, 0.5);
+  --border-dropzone: rgba(255, 255, 255, 0.12);
+  --table-head-bg: rgba(15, 23, 42, 0.6);
+  --table-row-border: rgba(255, 255, 255, 0.05);
+  --badge-bg: rgba(56, 189, 248, 0.12);
+  --badge-color: #38bdf8;
+  --badge-border: rgba(56, 189, 248, 0.25);
+  --pill-bg: rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme {
+  --bg-page: #f4f6f9;
+  --bg-topography: url('/topography-light.jpg');
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: rgba(255, 255, 255, 1);
+  --border-card: rgba(0, 0, 0, 0.08);
+  --card-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.08);
+  --text-title: #0f172a;
+  --text-body: #1e293b;
+  --text-muted: #475569;
+  --text-faint: #64748b;
+  --bg-track: #e2e8f0;
+  --border-track: #cbd5e1;
+  --bg-dropzone: rgba(248, 250, 252, 0.85);
+  --border-dropzone: rgba(0, 0, 0, 0.14);
+  --table-head-bg: rgba(241, 245, 249, 0.92);
+  --table-row-border: rgba(0, 0, 0, 0.06);
+  --badge-bg: rgba(2, 132, 199, 0.1);
+  --badge-color: #0284c7;
+  --badge-border: rgba(2, 132, 199, 0.25);
+  --pill-bg: rgba(0, 0, 0, 0.04);
+}
 
 * {
   box-sizing: border-box;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, sans-serif;
   margin: 0;
-  background-color: #080c14;
+  background-color: var(--bg-page);
   background-image: 
-    linear-gradient(180deg, rgba(8, 12, 20, 0.7) 0%, rgba(8, 12, 20, 0.88) 100%),
-    url('/topography.jpg');
+    radial-gradient(ellipse at 50% -20%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(6, 9, 17, 0.4) 0%, rgba(6, 9, 17, 0.6) 100%),
+    var(--bg-topography);
   background-repeat: repeat;
   background-position: center top;
   background-attachment: fixed;
-  background-size: 800px auto;
-  color: #f8fafc;
+  background-size: 700px auto;
+  color: var(--text-body);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.light-theme {
+  background-image: 
+    radial-gradient(ellipse at 50% -20%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(244, 246, 249, 0.92) 0%, rgba(241, 245, 249, 0.95) 100%),
+    var(--bg-topography);
+}
+
+/* Animations */
+@keyframes pulseLive {
+  0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+  50% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+}
+
+@keyframes progressStripes {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
 }
 
 @keyframes shimmer {
@@ -25,14 +92,13 @@ body {
   100% { background-position: 200% 0; }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.4)); }
-  50% { opacity: 0.85; transform: scale(1.02); filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7)); }
-}
-
-@keyframes progressStripes {
-  from { background-position: 40px 0; }
-  to { background-position: 0 0; }
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulseLive 2s infinite;
 }
 
 .animated-stripes {
@@ -50,16 +116,17 @@ body {
   animation: progressStripes 1s linear infinite;
 }
 
-.shimmer-bg {
-  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
-
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6) !important;
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
 }

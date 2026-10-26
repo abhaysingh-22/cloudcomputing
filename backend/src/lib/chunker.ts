@@ -63,3 +63,21 @@ export async function computeChunks(
 
   return ranges;
 }
+
+/**
+ * Fast binary byte-range calculation for non-CSV files (PDF, images, videos, DOCX, etc.)
+ */
+export function computeBinaryChunks(totalSize: number, targetSize: number): ByteRange[] {
+  const ranges: ByteRange[] = [];
+  let start = 0;
+  let index = 0;
+
+  while (start < totalSize) {
+    const end = Math.min(start + targetSize - 1, totalSize - 1);
+    ranges.push({ index, startByte: start, endByte: end });
+    start = end + 1;
+    index++;
+  }
+
+  return ranges;
+}

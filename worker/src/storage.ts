@@ -19,3 +19,14 @@ export async function putText(key: string, body: string) {
     new PutObjectCommand({ Bucket: env.S3_BUCKET, Key: key, Body: body, ContentType: "text/csv" })
   );
 }
+
+export async function getBuffer(key: string): Promise<Buffer> {
+  const res = await s3.send(new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: key }));
+  return Buffer.from(await res.Body!.transformToByteArray());
+}
+
+export async function putBuffer(key: string, body: Buffer, contentType: string = "application/octet-stream") {
+  await s3.send(
+    new PutObjectCommand({ Bucket: env.S3_BUCKET, Key: key, Body: body, ContentType: contentType })
+  );
+}
