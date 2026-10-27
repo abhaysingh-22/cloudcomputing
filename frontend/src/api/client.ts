@@ -1,7 +1,13 @@
 import axios from "axios";
 
+const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+const apiBaseUrl = isLocal
+  ? "http://localhost:4000"
+  : (import.meta.env.VITE_API_URL || "https://symptoms-alarm-travels-matches.trycloudflare.com");
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: apiBaseUrl,
 });
 
 // Attach the JWT to every request
