@@ -4,16 +4,17 @@ const isLocal = typeof window !== "undefined" && (window.location.hostname === "
 
 const apiBaseUrl = isLocal
   ? "http://localhost:4000"
-  : (import.meta.env.VITE_API_URL || "https://symptoms-alarm-travels-matches.trycloudflare.com");
+  : (import.meta.env.VITE_API_URL || "https://elect-hiring-second-bookmark.trycloudflare.com");
 
 export const api = axios.create({
   baseURL: apiBaseUrl,
 });
 
-// Attach the JWT to every request
+// Attach the JWT and bypass tunnel reminder header to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  config.headers["Bypass-Tunnel-Reminder"] = "true";
   return config;
 });
 

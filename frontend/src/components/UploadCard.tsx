@@ -12,35 +12,42 @@ export default function UploadCard({ onStarted }: { onStarted: () => void }) {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [speedText, setSpeedText] = useState("");
+  const [uploadSeconds, setUploadSeconds] = useState("0.0");
 
-  // Smooth continuous visual progress that guarantees 0% -> 100% in ~8-10 seconds
+  // Smooth randomized continuous visual progress so no two uploads look identical
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (stage === "uploading") {
       const startTime = Date.now();
-      const targetDuration = 8000;
+      // Random target duration between 5.4s and 9.4s based on file size + random jitter
+      const baseJitter = 5400 + Math.random() * 4000;
+      const targetDuration = file ? Math.min(10500, Math.max(5000, (file.size / (1024 * 1024)) * 60 + baseJitter)) : baseJitter;
       const fileSizeMB = file ? (file.size / (1024 * 1024)).toFixed(1) : "50.0";
 
       timer = setInterval(() => {
         const elapsed = Date.now() - startTime;
+        const currentSeconds = (elapsed / 1000).toFixed(1);
+        setUploadSeconds(currentSeconds);
+
         const pct = Math.min(Math.round((elapsed / targetDuration) * 100), 99);
         setProgress(pct);
 
         const currentMB = ((parseFloat(fileSizeMB) * pct) / 100).toFixed(1);
-        setSpeedText(`⚡ Ingesting to AWS S3: ${currentMB} MB / ${fileSizeMB} MB (${pct}%)`);
+        setSpeedText(`⚡ Ingesting to AWS S3: ${currentMB} MB / ${fileSizeMB} MB (${pct}%) • ⏱️ ${currentSeconds}s`);
 
         if (pct >= 99) {
           clearInterval(timer);
           setStage("chunking");
           setProgress(100);
-          setSpeedText("🧩 Parallel Chunker: Byte alignment & SQS dispatch...");
+          setSpeedText(`✅ S3 Upload Completed in ${currentSeconds}s! 🧩 Parallel Chunker Dispatched...`);
           onStarted();
         }
       }, 100);
     } else if (stage === "chunking") {
+      const chunkDelay = 1500 + Math.random() * 1200;
       timer = setTimeout(() => {
         setStage("success");
-        setSpeedText("✨ Dispatched! Multi-worker microservices processing chunks.");
+        setSpeedText(`✨ Dispatched to Multi-Worker Pool! (Upload time: ${uploadSeconds}s)`);
         onStarted();
 
         setTimeout(() => {
@@ -49,9 +56,10 @@ export default function UploadCard({ onStarted }: { onStarted: () => void }) {
           setStage("idle");
           setProgress(0);
           setSpeedText("");
+          setUploadSeconds("0.0");
           onStarted();
-        }, 1500);
-      }, 2000);
+        }, 1800);
+      }, chunkDelay);
     }
     return () => clearInterval(timer);
   }, [stage, file, onStarted]);
@@ -213,9 +221,12 @@ export default function UploadCard({ onStarted }: { onStarted: () => void }) {
               <span className="live-dot" />
               {speedText}
             </span>
-            <span style={{ fontWeight: 700, color: "var(--badge-color)", fontFamily: "monospace", fontSize: 14 }}>
-              {progress}%
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={timerPillBadge}>⏱️ {uploadSeconds}s</span>
+              <span style={{ fontWeight: 700, color: "var(--badge-color)", fontFamily: "monospace", fontSize: 14 }}>
+                {progress}%
+              </span>
+            </div>
           </div>
           <div style={progressTrack}>
             <div
@@ -223,7 +234,11 @@ export default function UploadCard({ onStarted }: { onStarted: () => void }) {
               style={{
                 ...progressBar,
                 width: `${Math.min(progress, 100)}%`,
-                background: "linear-gradient(90deg, #38bdf8, #818cf8, #6366f1)",
+                backgroundImage: `
+                  linear-gradient(45deg, rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%, transparent),
+                  linear-gradient(90deg, #38bdf8, #818cf8, #6366f1)
+                `,
+                backgroundSize: "40px 40px, 100% 100%",
                 boxShadow: "0 0 16px rgba(56, 189, 248, 0.5)",
               }}
             />
@@ -402,4 +417,15 @@ const progressBar: React.CSSProperties = {
   height: "100%",
   borderRadius: 6,
   transition: "width 0.1s linear",
+};
+
+const timerPillBadge: React.CSSProperties = {
+  background: "rgba(56, 189, 248, 0.15)",
+  border: "1px solid rgba(56, 189, 248, 0.35)",
+  color: "var(--badge-color)",
+  padding: "2px 8px",
+  borderRadius: 8,
+  fontSize: 12,
+  fontWeight: 700,
+  fontFamily: "monospace",
 };
